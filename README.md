@@ -25,6 +25,6 @@ I play chess professionally , and after every game I know I blundered but not wh
 - Git and GitHub
 
 ## Docs
-- [Eisenhower Matrix](docs/eisenhower_matrix.pdf)
-- [System Diagram](docs/system_diagram.png)
+- [Eisenhower Matrix](Eisenhower_Matrix.pdf)
+- [System Diagram](System_Diagram.png)
 
