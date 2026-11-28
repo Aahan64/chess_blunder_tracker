@@ -1,3 +1,4 @@
+import json
 import shutil
 import sys
 
@@ -6,6 +7,8 @@ import chess.engine
 
 THINK_TIME = 0.1    # seconds per position, fast enough that typing moves never feels slow
 BLUNDER_DROP = 150  # about a pawn and a half, my personal line for a real blunder
+MIN_GAMES = 10      # fewer than this and the pattern is mostly noise
+SAVE_FILE = "games.json"
 
 
 def start_engine():
@@ -29,6 +32,35 @@ def get_phase(move_number):
     if move_number <= 35:
         return "middlegame"
     return "endgame"
+
+
+def load_games():
+    try:
+        with open(SAVE_FILE) as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        # First run or a broken file, either way I start with a clean list
+        return []
+
+
+def save_games(games):
+    with open(SAVE_FILE, "w") as f:
+        json.dump(games, f, indent=2)
+
+
+def print_report(games):
+    if len(games) < MIN_GAMES:
+        print(f"Need {MIN_GAMES - len(games)} more games for a report.")
+        return
+
+    counts = {"opening": 0, "middlegame": 0, "endgame": 0}
+    for game in games:
+        for blunder in game["blunders"]:
+            counts[blunder["phase"]] += 1
+
+    for phase, count in counts.items():
+        print(f"{phase}: {count}")
+    print(f"Your worst phase is the {max(counts, key=counts.get)}.")
 
 
 def ask_color():
@@ -83,10 +115,16 @@ def play_game(engine):
 
 if __name__ == "__main__":
     engine = start_engine()
+    games = load_games()
     try:
         found = play_game(engine)
         print(f"Blunders this game: {len(found)}")
         for blunder in found:
             print(f"Move {blunder['move_number']}: {blunder['move']} ({blunder['phase']})")
+
+        games.append({"blunders": found})
+        save_games(games)
+        print(f"Game saved. Total games: {len(games)}")
+        print_report(games)
     finally:
         engine.quit()
